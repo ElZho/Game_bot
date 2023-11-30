@@ -1,8 +1,8 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from aiogram.types import InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
-from lexicon.lexicon_ru import LEXICON_RU, LEXICON_INLINE_BUTTUNS, LEXICON_YES_NO
+from lexicon.lexicon_ru import LEXICON_INLINE_BUTTUNS, LEXICON_YES_NO
 
 # ------- Создаем клавиатуру через ReplyKeyboardBuilder -------
 
