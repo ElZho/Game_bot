@@ -1,8 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import pandas as pd
 
 from config_data.config import Config, load_config
-from .models import Base, User, GameReport
+from database.models import Base, User, GameReport
 
 
 config: Config = load_config()
@@ -40,3 +41,19 @@ def count_games(tg_id):
     game_number = session.query(GameReport).filter(GameReport.owner == user.id).count()
     session.commit()
     return game_number
+
+
+def get_game_statistic(tg_id: int) -> tuple[int, int, int, int] | None:
+    engine = create_engine(config.db.db_address, echo=True)
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    user = session.query(User).filter(User.user_id == tg_id).first()
+    if user is None or user.reports is None:
+        return None
+    data = pd.read_sql(session.query(GameReport).filter(GameReport.owner == user.id).statement, session.bind)
+    games, wins, defeats = data['game_number'].max(), data.win.sum(), data.defeat.sum()
+    draws = wins + defeats-games
+    wins -= draws
+    defeats -= draws
+    return games, wins, defeats, draws

@@ -30,4 +30,4 @@ class GameReport(Base):
     attempts = Column(Integer, nullable=False)
 
     def __repr__(self):
-        return self.number_of_game
+        return self.game_number
