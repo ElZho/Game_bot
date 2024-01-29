@@ -4,12 +4,12 @@ from environs import Env
 
 @dataclass
 class TgBot:
-    token: str            # Токен для доступа к телеграм-боту
+    token: str            # Token to access telegram-bot
 
 
 @dataclass
 class DB:
-    db_address: str       # Адресс для доступа к базе данных
+    db_address: str       # Database address
 
 
 @dataclass

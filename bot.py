@@ -8,41 +8,40 @@ from handlers import other_handlers, user_handlers
 from keyboards.set_menu import set_main_menu
 
 
-# Инициализируем логгер
+# Initializing the logger
 logger = logging.getLogger(__name__)
 
-# Инициализируем хранилище (создаем экземпляр класса MemoryStorage)
+# Initializing storage (creating a sample of MemoryStorage class)
 storage = MemoryStorage()
 
 
-# Функция конфигурирования и запуска бота
+# Func of initiation and starting the bot
 async def main() -> None:
-    # Конфигурируем логирование
+    # Configure logger
     logging.basicConfig(
         level=logging.INFO,
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
                '[%(asctime)s] - %(name)s - %(message)s')
 
-    # Выводим в консоль информацию о начале запуска бота
+    # print info about starting the bot
     logger.info('Starting bot')
 
-    # Загружаем конфиг в переменную config
+    # Load configuration into variable config
     config: Config = load_config()
 
-    # Инициализируем бот и диспетчер
+    # Initialize the bot and dispatcher
     bot = Bot(token=config.tg_bot.token,
               parse_mode='HTML')
     dp = Dispatcher(storage=storage)
 
-    # Настраиваем кнопку Menu
+    # Configure the Menu button
     await set_main_menu(bot)
 
-    # Регистриуем роутеры в диспетчере
-    # dp.include_router(start_handlers.router)
+    # Registry routers in dispatcher
     dp.include_router(user_handlers.router)
     dp.include_router(other_handlers.router)
 
-    # Пропускаем накопившиеся апдейты и запускаем polling
+    # Scip accumulated updates and start polling
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 

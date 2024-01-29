@@ -10,11 +10,16 @@ config: Config = load_config()
 
 
 def add_user(tg_id):
-    engine = create_engine(config.db.db_address, echo=True)  # создаем фабрику для соединения с базой данных
-    Base.metadata.create_all(engine)                         # создаем таблицы, если они не созданы
-    Session = sessionmaker(bind=engine)                      # создаем соединение с бд
-    session = Session()                                      # записываем в переменную
+    #create database engine
+    engine = create_engine(config.db.db_address, echo=True)
+    #create tables if they have not created yet
+    Base.metadata.create_all(engine)
+    #create database session
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    #select data from database relevant to current user
     user = session.query(User).filter(User.user_id == tg_id).first()
+    #create new user if current user not in database
     if user is None:
         new_user = User(user_id=tg_id)
         session.add(new_user)
@@ -22,6 +27,7 @@ def add_user(tg_id):
 
 
 def create_game_report(tg_id: int, game: int, win: bool, defeats: bool, attempts: int):
+    # func to write game report into database
     engine = create_engine(config.db.db_address, echo=True)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
@@ -33,9 +39,10 @@ def create_game_report(tg_id: int, game: int, win: bool, defeats: bool, attempts
 
 
 def count_games(tg_id):
-    engine = create_engine(config.db.db_address, echo=True)  # создаем фабрику для соединения с базой данных
-    Base.metadata.create_all(engine)  # создаем таблицы, если они не созданы
-    Session = sessionmaker(bind=engine)  # создаем соединение с бд
+    #func to count numbers of games current user have already played
+    engine = create_engine(config.db.db_address, echo=True)
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
     session = Session()
     user = session.query(User).filter(User.user_id == tg_id).first()
     game_number = session.query(GameReport).filter(GameReport.owner == user.id).count()
@@ -44,6 +51,7 @@ def count_games(tg_id):
 
 
 def get_game_statistic(tg_id: int) -> tuple[int, int, int, int] | None:
+    # func to get game statistics of current user: numbers of wins, defeats und draw
     engine = create_engine(config.db.db_address, echo=True)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
