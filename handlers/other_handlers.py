@@ -12,7 +12,7 @@ async def del_main_menu(message: Message, bot: Bot):
     await message.answer(text='Кнопка "Menu" удалена')
 
 
-# Хэндлер для сообщений, которые не попали в другие хэндлеры
+# handler for the message, which do not catched other handlers 
 @router.message()
 async def send_answer(message: Message):
     await message.answer(text=LEXICON_RU['other_answer'])

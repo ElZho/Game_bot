@@ -16,20 +16,20 @@ from database.methods import add_user, create_game_report, count_games, get_game
 router = Router()
 
 
-# Этот хэндлер срабатывает на команду /start
+# handler to catch command /start
 @router.message(CommandStart())
 async def process_start_command(message: Message):
     add_user(message.from_user.id)
     await message.answer(text=LEXICON_RU['/start'])
 
 
-# Этот хэндлер срабатывает на команду /help
+# handler to catch command /help
 @router.message(Command(commands='help'))
 async def process_help_command(message: Message):
     await message.answer(text=LEXICON_RU['/help'], reply_markup=yes_no_kb)
 
 
-# Этот хэндлер срабатывает на команду /game
+# handler to catch command /game
 @router.message(Command(commands='game'), StateFilter(default_state))
 async def process_game_command(message: Message, state: FSMContext):
     await state.set_state(default_state)
@@ -39,7 +39,7 @@ async def process_game_command(message: Message, state: FSMContext):
     await state.set_state(FSMInGame.wait_move)
 
 
-# Этот хэндлер срабатывает на согласие пользователя играть в игру
+# handler to catch if user wants to play
 @router.callback_query(F.data.in_('yes'), StateFilter(default_state))
 async def process_yes_answer(callback: CallbackQuery, state: FSMContext):
     new_game = start_game()
@@ -48,20 +48,20 @@ async def process_yes_answer(callback: CallbackQuery, state: FSMContext):
     await state.set_state(FSMInGame.wait_move)
 
 
-# Этот хэндлер срабатывает на отказ пользователя играть в игру
+# handler to catch if user refused to play the game
 @router.callback_query(F.data.in_('no'), StateFilter(default_state))
 async def process_no_answer(callback: CallbackQuery):
     await callback.message.edit_text(text=LEXICON_RU['no'])
 
 
-# Этот хэндлер будет срабатывать на команду "/cancel", если пользователь не играет в игру
+# handler to catch command "cansel", if user does not play the game
 @router.message(Command(commands='cansel'), StateFilter(default_state))
 async def process_cancel_command(message: Message):
     await message.answer(text=LEXICON_RU['cansel_in_no_game'])
 
 
-# Этот хэндлер будет срабатывать на команду "/cancel", если пользователь играет в игру,
-# и защитывает пользователю поражение
+#  handler to catch command "cansel", if user plays the game 
+# and stop user from defeat
 @router.message(Command(commands='cansel'), ~StateFilter(default_state))
 async def process_cancel_command(message: Message, state: FSMContext):
     data = await state.get_data()
@@ -71,7 +71,7 @@ async def process_cancel_command(message: Message, state: FSMContext):
     await state.clear()
 
 
-# Этот хендлер срабатывает на команду "Мои ходы" и показывает пользователю историю ходов в текущей игре
+# handler to catch command "Мои ходы" and shows history of users moves in corrent game
 @router.message(Command(commands='my_moves'), ~StateFilter(default_state))
 async def process_cancel_command(message: Message, state: FSMContext):
     data = await state.get_data()
@@ -80,8 +80,7 @@ async def process_cancel_command(message: Message, state: FSMContext):
     await message.answer(text)
 
 
-# Этот хэндлер срабатывает на команду "Статистика" и предоставляет статистику игр пользователя кол-во побед, поражений
-# и игр сыгранных в ничью
+# handler to catch command "Статистика" - statistics and shows statistics of users games
 @router.message(Command(commands='stat'))
 async def process_cancel_command(message: Message):
     result = get_game_statistic(message.from_user.id)
@@ -92,7 +91,7 @@ async def process_cancel_command(message: Message):
     await message.answer(text)
 
 
-# Этот хэндлер будет срабатывать на отправку пользователем чисел от3-х значных чисел
+# handler to catch if user sends three-digits numbers
 @router.message(lambda x: x.text and x.text.isdigit() and len(x.text) == 3, StateFilter(FSMInGame.wait_move))
 async def process_numbers_answer(message: Message, state: FSMContext):
     data = await state.get_data()
@@ -112,7 +111,7 @@ async def process_numbers_answer(message: Message, state: FSMContext):
         await state.set_state(FSMInGame.wait_answer)
 
 
-# Этот хендлер срабатывает на нажатие кнопки - 3 быка. Бот угадал число.
+# handler to catch if user press 3-boll button.
 @router.callback_query(F.data.in_('30'), StateFilter(FSMInGame.wait_answer))
 async def three_bull_buttons_press(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
@@ -129,33 +128,32 @@ async def three_bull_buttons_press(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
 
-# Этот хендлер срабатывает на оценку пользователем варианта загаданного числа, которое предложил бот
+# handler to catch users answer to bots current number
 @router.callback_query(F.data.in_(LEXICON_INLINE_BUTTUNS.keys()), StateFilter(FSMInGame.wait_answer))
 async def process_buttons_press(callback: CallbackQuery, state: FSMContext):
-    # Получаем кол-во быков и коров
+    # get bots number boll and cows
     b, c = list(map(int, list(callback.data)))
-    # Получаем сохраненные ранее данные
+    # get previously saved data
     data = await state.get_data()
-    # Записываем вариант хода в историю
+    # write moves history
     history = write_history(data['bots_number'], b, c, data['history'])
 
-    # Передаем кол-во быков и коров, источник вариантов, историю ходов, число, которое предложил бот,
-    # признак завершения перебора всех чисел и коров, которые выявили в процессе игры.
+    # send data to memory storage
     source, k, cow = process_result(b, c, data['source'], history, list(map(int, list(data['bots_number']))), data['k'],
                                     data['cow'])
-    # Обновляем хранимые данные
+    # update data in memory storage
     await state.update_data(source=source, bots_bulls_cow=callback.data, history=history, k=k, cow=cow)
-    # формируем текст
+    # make text for massage
     text = LEXICON_RU['answer'].format(data['attempts'], data['users_number'], *list(data['users_bulls_cow']),
                                        data['bots_number'], b, c)
-    # Проверяем отгадал пользователь число, загаданное ботом.
+    # check if user guessed number or not
     if data['users_bulls_cow'] == '30':
         game = count_games(callback.from_user.id) + 1
         create_game_report(callback.from_user.id, game, 1, 0, data['attempts'])
-        # обновляем данные в сообщении, если пользователь угадал число, и завершаем игру.
+        # update text in massege if user guessed number.
         await callback.message.edit_text(text+LEXICON_RU['user_guess'], reply_markup=yes_no_kb)
         await state.clear()
     else:
-        # обновляем данные в сообщении, если пользователь не угадал число и обновляем статус
+        # update text in massege if user does not guess
         await callback.message.edit_text(text+LEXICON_RU['your_move'])
         await state.set_state(FSMInGame.wait_move)
