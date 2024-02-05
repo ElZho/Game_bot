@@ -4,7 +4,7 @@ from itertools import permutations
 from lexicon.lexicon_ru import LEXICON_RU
 
 
-# Формируем словарь для новой игры
+# create a dict for new game
 def _new_game(secret_number: list, source: list) -> dict:
     return dict(secret_number=secret_number, attempts=0,
                 history={'3b0c': [], '1b2c': [], '0b3c': [], '2b0c': [], '0b2c': [], '1b1c': [], '1b0c': [],
@@ -16,19 +16,19 @@ def _new_game(secret_number: list, source: list) -> dict:
 
 
 def _drop_pars(sample, item):
-    ''' Эта функция удаляет варианты, где встречаются две цифры из варианта, где только одна цифра верная'''
+    ''' This func delete wrong set of digits, where are 2 digits from set, where just 1 digit is right'''
     return list(filter(lambda x: not any(
         (item[0] in x and item[1] in x, item[0] in x and item[2] in x, item[1] in x and item[2] in x)), sample))
 
 
 def _keep_pars(example, new_var):
-    ''' Эта функция удаляет варианты, в которых не встречаются две цифры из числа, где две цифры верные'''
+    ''' This func delete wrong set of digits, where are not 2 digits from set, where 2 digit is right'''
     return list(filter(lambda x: any([new_var[0] in x and new_var[1] in x,
                                       new_var[0] in x and new_var[2] in x,
                                       new_var[1] in x and new_var[2] in x]), example))
 
 
-# пишем результат в историю
+# write result in game's history
 def write_history(number: str, b: int, c: int, history: dict) -> dict:
     key = f'{b}b{c}c'
     history[key].append(list(map(int, list(number))))
@@ -36,69 +36,68 @@ def write_history(number: str, b: int, c: int, history: dict) -> dict:
 
 
 def _check_source(example: list, new_var: list, b: int, c: int, cow=None) -> list:
-    ''' Эта функция обрабатывает источник вариантов и в зависимости от последнего варианта, названного ботом и его
-    результата удаляет варианты, которые не соответствует выявленным фактам'''
+    ''' This func process source of sets depends of set bot declare and result of this bot's move. 
+    Delets wrong sets'''
     if not cow:
         cow = []
-    # Если выявлена корова, то проверяем, что она обязательно во всех вариантах источника
+    # If there is a cow, then check, that this digit is in all sets in source. Cow is a necessarily in set.
     if cow:
         example = list(filter(lambda x: all(i in x for i in cow), example))
 
-    # Проверяем, если вариант выявил 3 правильные цифры, удаляем лишние варианты
+    # Check if we know all right digits, all that digits should be in set. Sets that not have all right digit should be deleted
     if b + c == 3:
-        # контроль на то, чтобы все цифры были в числе
+        # check that all digit in set
         example = list(filter(lambda x: all([i in x for i in new_var]), example))
-        # контроль на то, чтобы убрать использованный вариант
+        # check if used set is deleted
         example = list(filter(lambda x: list(x) != new_var, example))
 
-    # Если два быка были названы, удаляем все варианты, где цифры стоят на других позициях, чем вариант с 2 быками
+    # If 2 bulls in declared set, delete sets, where digits from this set are in right positions like in declared set
     elif b == 2 and c == 0:
         example = list(filter(lambda x: any([new_var[0] == x[0] and new_var[1] == x[1],
                                              new_var[0] == x[0] and new_var[2] == x[2],
                                              new_var[1] == x[1] and new_var[2] == x[2]]), example))
 
-    # Удаляем варианты, которые не соответствуют варианту 1 бык в числе
+    # Delete sets, which not response declared set with 1 bull
     elif b == 1 and c == 0:
-        # контроль на то, чтобы цифры из варианта с быками были на своем месте
+        # check right position of each digits in set
         example = list(filter(lambda x: all([x[i] == new_var[i] for i in range(3)
                                              if new_var[i] in x]), example))
 
-    # контроль на то, чтобы цифры из варианта с коровами не были на своем месте
+    # check for declared set with 2 cows. All digits not in position like in declared set
     elif b == 0 and c == 2:
-        # оставляем только варианты с парами
+        # delete all set, where not 2 digits from set with 2 cows
         example = _keep_pars(example, new_var)
-        # оставляем только варианты, где коровы на других местах
+        # delete all set, where digits on positions like in set with 2 cows
         example = list(filter(lambda x: all([x[i] != new_var[i] for i in range(3)
                                              if new_var[i] in x]), example))
-    # обрабатываем вариант, где только одни коровы
+    # process set, which consists of cows
     elif b == 0 and c > 0:
         example = list(filter(lambda x: all([x[i] != new_var[i] for i in range(3)
                                              if new_var[i] in x]), example))
 
-    # контроль на то, чтобы в вариантах присутствовали 2 цифры из варианта, где было 2 правильные цифры
+    # check that sets conteins 2 digits wrom set with 2 right digits
     elif b + c == 2:
-        # оставляем только те варианты, где упоминаются две цифры из числа
+        # delete all set, which do not contein 2 digit from set with 2 right digits
         example = _keep_pars(example, new_var)
-        # контроль на то, чтобы все 3 цифры не входили в варианты
+        # delete all sets, which conteins 3 digits from set wich 2 right digits
         example = list(filter(lambda x: not all([i in x for i in new_var]), example))
 
-    # контроль, чтобы цифры из варианта с 1 правильной цифрой не встречались в одном варианте
+    # delete sets that contains more that 1 digit from set wich 1 right digit 
     if b + c == 1:
         example = _drop_pars(example, new_var)
 
-    # удаляем уже названные экзепляры
+    # delete all declared sets
     if b + c < 3:
         example = list(filter(lambda x: sorted(x) != sorted(new_var), example))
-    # первая цифра не должна быть нулем
+    # delete all sets where 0 is on first position
     example = list(filter(lambda x: x[0] != 0, example))
 
     return example
 
 
-# набор источника
+# create set's source
 def _collect_source(history: dict, cow=None) -> list:
-    ''' Эта функция формирует источкик из истории, после того, как были перебраны все цифры или выявлены наборы с 3
-    цифрами'''
+    ''' This func creates a source of sets from digits from history after all digits from 0 to 9 where declared'''
     if not cow:
         cow = []
     source = []
