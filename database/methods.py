@@ -10,16 +10,16 @@ config: Config = load_config()
 
 
 def add_user(tg_id):
-    #create database engine
+    # create database engine
     engine = create_engine(config.db.db_address, echo=True)
-    #create tables if they have not created yet
+    # create tables if they have not created yet
     Base.metadata.create_all(engine)
-    #create database session
+    # create database session
     Session = sessionmaker(bind=engine)
     session = Session()
-    #select data from database relevant to current user
+    # select data from database relevant to current user
     user = session.query(User).filter(User.user_id == tg_id).first()
-    #create new user if current user not in database
+    # create new user if current user not in database
     if user is None:
         new_user = User(user_id=tg_id)
         session.add(new_user)
@@ -39,7 +39,7 @@ def create_game_report(tg_id: int, game: int, win: bool, defeats: bool, attempts
 
 
 def count_games(tg_id):
-    #func to count numbers of games current user have already played
+    # func to count numbers of games current user have already played
     engine = create_engine(config.db.db_address, echo=True)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)

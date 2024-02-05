@@ -71,7 +71,7 @@ async def process_cancel_command(message: Message, state: FSMContext):
     await state.clear()
 
 
-# handler to catch command "Мои ходы" and shows history of users moves in corrent game
+# handler to catch command "Мои ходы" (my moves) and shows history of users moves in corrent game
 @router.message(Command(commands='my_moves'), ~StateFilter(default_state))
 async def process_cancel_command(message: Message, state: FSMContext):
     data = await state.get_data()
@@ -128,10 +128,10 @@ async def three_bull_buttons_press(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
 
-# handler to catch users answer to bots current number
+# handler to catch users answer to bot's current number
 @router.callback_query(F.data.in_(LEXICON_INLINE_BUTTUNS.keys()), StateFilter(FSMInGame.wait_answer))
 async def process_buttons_press(callback: CallbackQuery, state: FSMContext):
-    # get bots number boll and cows
+    # get bot's number boll and cows
     b, c = list(map(int, list(callback.data)))
     # get previously saved data
     data = await state.get_data()

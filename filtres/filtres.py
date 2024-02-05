@@ -3,7 +3,7 @@ from aiogram.types import Message, CallbackQuery, Update
 
 
 class IsinGame(BaseFilter):
-    #check if user in game or not
+    # check if user in game or not
     def __init__(self, users) -> None:
         self.users = users
 
@@ -12,7 +12,7 @@ class IsinGame(BaseFilter):
 
 
 class IsUser(BaseFilter):
-    #check if user is in database or not
+    # check if user is in database or not
     def __init__(self, users) -> None:
         self.users = users
 
