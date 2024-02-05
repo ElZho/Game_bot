@@ -1,8 +1,10 @@
 from aiogram.fsm.state import State, StatesGroup
 
 
-# Cоздаем класс, наследуемый от StatesGroup, для группы состояний нашей FSM
+# create class inheited from StatesGroup, for FSM group of states
 class FSMInGame(StatesGroup):
-    # состояние пользователя в игре. Сообщает чей ход ожидается
-    wait_move = State()        # Состояние ожидания хода пользоавтеля
-    wait_answer = State()         # Состояние ожидания ответа пользователя на ход бота
+    # states users during the game 
+    # waiting of user's move state
+    wait_move = State()        
+    # wating of users response to the bot's move 
+    wait_answer = State()         
